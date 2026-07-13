@@ -25,3 +25,6 @@ A **Logistic Regression** model was selected for the classification task.
 | **F1-Score** | 0.84 | 0.76 |
 #### 5. Conclusion
 The Logistic Regression model effectively predicted passenger survival with 81.01% accuracy. While the current results are strong, further enhancements could be made by incorporating more advanced machine learning algorithms or refined feature engineering techniques.
+
+##Project Report :
+(file_000000002db872078c94bc5065b58cde.png)

@@ -28,4 +28,4 @@ The Logistic Regression model effectively predicted passenger survival with 81.0
 
 ## Project Report
 
-![Project Report]()
+![Project Report](file_000000002db872078c94bc5065b58cde.png)

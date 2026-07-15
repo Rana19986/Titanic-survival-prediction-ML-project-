@@ -1,0 +1,2741 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Titanic Survival Prediction using Machine Learning"
+      ],
+      "metadata": {
+        "id": "D9BeNv3RN8fe"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Project objective :"
+      ],
+      "metadata": {
+        "id": "XvPHjImfPPgX"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The objective of this project is to build a Machine Learning model that predicts whether a passenger survived the Titanic disaster based on passenger information such as age, gender, ticket class, fare, and family details."
+      ],
+      "metadata": {
+        "id": "V-fkh2MIPYlT"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Import libraries :"
+      ],
+      "metadata": {
+        "id": "X_RRD_G2ODky"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "\n",
+        "from sklearn.model_selection import    train_test_split\n",
+        "from sklearn.preprocessing import    LabelEncoder\n",
+        "from sklearn.impute import    SimpleImputer\n",
+        "from sklearn.linear_model import    LogisticRegression\n",
+        "from sklearn.metrics import    (\n",
+        "\n",
+        "        accuracy_score,\n",
+        "        confusion_matrix,\n",
+        "        classification_report\n",
+        "       )"
+      ],
+      "metadata": {
+        "id": "FHWXkl54OW4v"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Load dataset:"
+      ],
+      "metadata": {
+        "id": "mzNA93WdgAHr"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain = pd.read_csv(\"/content/sample_data/train.csv\")\n",
+        "dftest = pd.read_csv(\"/content/sample_data/test.csv\")"
+      ],
+      "metadata": {
+        "id": "gDYaMXDfgJ-I"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.shape"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "nE-2e1FthDDm",
+        "outputId": "84c146c6-1f7d-47b2-8ac4-b15d30be5974"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "(891, 12)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 33
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest.shape"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "REVv4WmChZjf",
+        "outputId": "233e6bc2-f78d-4cdd-e719-a1ab88c5215a"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "(418, 11)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 34
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.info()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "F6An9o9Jhl9-",
+        "outputId": "a32b8fe1-373f-40ec-bed8-6e5dc052927d"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 891 entries, 0 to 890\n",
+            "Data columns (total 12 columns):\n",
+            " #   Column       Non-Null Count  Dtype  \n",
+            "---  ------       --------------  -----  \n",
+            " 0   PassengerId  891 non-null    int64  \n",
+            " 1   Survived     891 non-null    int64  \n",
+            " 2   Pclass       891 non-null    int64  \n",
+            " 3   Name         891 non-null    object \n",
+            " 4   Sex          891 non-null    object \n",
+            " 5   Age          714 non-null    float64\n",
+            " 6   SibSp        891 non-null    int64  \n",
+            " 7   Parch        891 non-null    int64  \n",
+            " 8   Ticket       891 non-null    object \n",
+            " 9   Fare         891 non-null    float64\n",
+            " 10  Cabin        204 non-null    object \n",
+            " 11  Embarked     889 non-null    object \n",
+            "dtypes: float64(2), int64(5), object(5)\n",
+            "memory usage: 83.7+ KB\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest.info()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "9ZoylTWEhyEq",
+        "outputId": "862c9f89-ce1e-4c13-f4c3-a64825d90fef"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 418 entries, 0 to 417\n",
+            "Data columns (total 11 columns):\n",
+            " #   Column       Non-Null Count  Dtype  \n",
+            "---  ------       --------------  -----  \n",
+            " 0   PassengerId  418 non-null    int64  \n",
+            " 1   Pclass       418 non-null    int64  \n",
+            " 2   Name         418 non-null    object \n",
+            " 3   Sex          418 non-null    object \n",
+            " 4   Age          332 non-null    float64\n",
+            " 5   SibSp        418 non-null    int64  \n",
+            " 6   Parch        418 non-null    int64  \n",
+            " 7   Ticket       418 non-null    object \n",
+            " 8   Fare         417 non-null    float64\n",
+            " 9   Cabin        91 non-null     object \n",
+            " 10  Embarked     418 non-null    object \n",
+            "dtypes: float64(2), int64(4), object(5)\n",
+            "memory usage: 36.1+ KB\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.describe()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 320
+        },
+        "id": "kN2UQOszjr81",
+        "outputId": "24cc8ae7-0293-4b2f-ab85-1dd3c17bcffe"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "       PassengerId    Survived      Pclass         Age       SibSp  \\\n",
+              "count   891.000000  891.000000  891.000000  714.000000  891.000000   \n",
+              "mean    446.000000    0.383838    2.308642   29.699118    0.523008   \n",
+              "std     257.353842    0.486592    0.836071   14.526497    1.102743   \n",
+              "min       1.000000    0.000000    1.000000    0.420000    0.000000   \n",
+              "25%     223.500000    0.000000    2.000000   20.125000    0.000000   \n",
+              "50%     446.000000    0.000000    3.000000   28.000000    0.000000   \n",
+              "75%     668.500000    1.000000    3.000000   38.000000    1.000000   \n",
+              "max     891.000000    1.000000    3.000000   80.000000    8.000000   \n",
+              "\n",
+              "            Parch        Fare  \n",
+              "count  891.000000  891.000000  \n",
+              "mean     0.381594   32.204208  \n",
+              "std      0.806057   49.693429  \n",
+              "min      0.000000    0.000000  \n",
+              "25%      0.000000    7.910400  \n",
+              "50%      0.000000   14.454200  \n",
+              "75%      0.000000   31.000000  \n",
+              "max      6.000000  512.329200  "
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-019b938e-5853-46fa-833b-41195aeb335e\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>PassengerId</th>\n",
+              "      <th>Survived</th>\n",
+              "      <th>Pclass</th>\n",
+              "      <th>Age</th>\n",
+              "      <th>SibSp</th>\n",
+              "      <th>Parch</th>\n",
+              "      <th>Fare</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>count</th>\n",
+              "      <td>891.000000</td>\n",
+              "      <td>891.000000</td>\n",
+              "      <td>891.000000</td>\n",
+              "      <td>714.000000</td>\n",
+              "      <td>891.000000</td>\n",
+              "      <td>891.000000</td>\n",
+              "      <td>891.000000</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>mean</th>\n",
+              "      <td>446.000000</td>\n",
+              "      <td>0.383838</td>\n",
+              "      <td>2.308642</td>\n",
+              "      <td>29.699118</td>\n",
+              "      <td>0.523008</td>\n",
+              "      <td>0.381594</td>\n",
+              "      <td>32.204208</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>std</th>\n",
+              "      <td>257.353842</td>\n",
+              "      <td>0.486592</td>\n",
+              "      <td>0.836071</td>\n",
+              "      <td>14.526497</td>\n",
+              "      <td>1.102743</td>\n",
+              "      <td>0.806057</td>\n",
+              "      <td>49.693429</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>min</th>\n",
+              "      <td>1.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>1.000000</td>\n",
+              "      <td>0.420000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>25%</th>\n",
+              "      <td>223.500000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>2.000000</td>\n",
+              "      <td>20.125000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>7.910400</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>50%</th>\n",
+              "      <td>446.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>3.000000</td>\n",
+              "      <td>28.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>14.454200</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>75%</th>\n",
+              "      <td>668.500000</td>\n",
+              "      <td>1.000000</td>\n",
+              "      <td>3.000000</td>\n",
+              "      <td>38.000000</td>\n",
+              "      <td>1.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>31.000000</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>max</th>\n",
+              "      <td>891.000000</td>\n",
+              "      <td>1.000000</td>\n",
+              "      <td>3.000000</td>\n",
+              "      <td>80.000000</td>\n",
+              "      <td>8.000000</td>\n",
+              "      <td>6.000000</td>\n",
+              "      <td>512.329200</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-019b938e-5853-46fa-833b-41195aeb335e')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-019b938e-5853-46fa-833b-41195aeb335e button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-019b938e-5853-46fa-833b-41195aeb335e');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "summary": "{\n  \"name\": \"dftrain\",\n  \"rows\": 8,\n  \"fields\": [\n    {\n      \"column\": \"PassengerId\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 320.8159711429856,\n        \"min\": 1.0,\n        \"max\": 891.0,\n        \"num_unique_values\": 6,\n        \"samples\": [\n          891.0,\n          446.0,\n          668.5\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Survived\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 314.8713661874558,\n        \"min\": 0.0,\n        \"max\": 891.0,\n        \"num_unique_values\": 5,\n        \"samples\": [\n          0.3838383838383838,\n          1.0,\n          0.4865924542648585\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Pclass\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 314.2523437079693,\n        \"min\": 0.8360712409770513,\n        \"max\": 891.0,\n        \"num_unique_values\": 6,\n        \"samples\": [\n          891.0,\n          2.308641975308642,\n          3.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Age\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 242.9056731818781,\n        \"min\": 0.42,\n        \"max\": 714.0,\n        \"num_unique_values\": 8,\n        \"samples\": [\n          29.69911764705882,\n          28.0,\n          714.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"SibSp\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 314.4908277465442,\n        \"min\": 0.0,\n        \"max\": 891.0,\n        \"num_unique_values\": 6,\n        \"samples\": [\n          891.0,\n          0.5230078563411896,\n          8.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Parch\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 314.65971717879,\n        \"min\": 0.0,\n        \"max\": 891.0,\n        \"num_unique_values\": 5,\n        \"samples\": [\n          0.38159371492704824,\n          6.0,\n          0.8060572211299559\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Fare\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 330.6256632228577,\n        \"min\": 0.0,\n        \"max\": 891.0,\n        \"num_unique_values\": 8,\n        \"samples\": [\n          32.204207968574636,\n          14.4542,\n          891.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {},
+          "execution_count": 37
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest.describe()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 320
+        },
+        "id": "Pl5MaJISkASX",
+        "outputId": "c970a8be-e984-4f6d-d3f2-b8863cab7183"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "       PassengerId      Pclass         Age       SibSp       Parch        Fare\n",
+              "count   418.000000  418.000000  332.000000  418.000000  418.000000  417.000000\n",
+              "mean   1100.500000    2.265550   30.272590    0.447368    0.392344   35.627188\n",
+              "std     120.810458    0.841838   14.181209    0.896760    0.981429   55.907576\n",
+              "min     892.000000    1.000000    0.170000    0.000000    0.000000    0.000000\n",
+              "25%     996.250000    1.000000   21.000000    0.000000    0.000000    7.895800\n",
+              "50%    1100.500000    3.000000   27.000000    0.000000    0.000000   14.454200\n",
+              "75%    1204.750000    3.000000   39.000000    1.000000    0.000000   31.500000\n",
+              "max    1309.000000    3.000000   76.000000    8.000000    9.000000  512.329200"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-08ca2bf9-c544-4d04-a6ea-d67a448ef3d9\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>PassengerId</th>\n",
+              "      <th>Pclass</th>\n",
+              "      <th>Age</th>\n",
+              "      <th>SibSp</th>\n",
+              "      <th>Parch</th>\n",
+              "      <th>Fare</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>count</th>\n",
+              "      <td>418.000000</td>\n",
+              "      <td>418.000000</td>\n",
+              "      <td>332.000000</td>\n",
+              "      <td>418.000000</td>\n",
+              "      <td>418.000000</td>\n",
+              "      <td>417.000000</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>mean</th>\n",
+              "      <td>1100.500000</td>\n",
+              "      <td>2.265550</td>\n",
+              "      <td>30.272590</td>\n",
+              "      <td>0.447368</td>\n",
+              "      <td>0.392344</td>\n",
+              "      <td>35.627188</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>std</th>\n",
+              "      <td>120.810458</td>\n",
+              "      <td>0.841838</td>\n",
+              "      <td>14.181209</td>\n",
+              "      <td>0.896760</td>\n",
+              "      <td>0.981429</td>\n",
+              "      <td>55.907576</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>min</th>\n",
+              "      <td>892.000000</td>\n",
+              "      <td>1.000000</td>\n",
+              "      <td>0.170000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>25%</th>\n",
+              "      <td>996.250000</td>\n",
+              "      <td>1.000000</td>\n",
+              "      <td>21.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>7.895800</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>50%</th>\n",
+              "      <td>1100.500000</td>\n",
+              "      <td>3.000000</td>\n",
+              "      <td>27.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>14.454200</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>75%</th>\n",
+              "      <td>1204.750000</td>\n",
+              "      <td>3.000000</td>\n",
+              "      <td>39.000000</td>\n",
+              "      <td>1.000000</td>\n",
+              "      <td>0.000000</td>\n",
+              "      <td>31.500000</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>max</th>\n",
+              "      <td>1309.000000</td>\n",
+              "      <td>3.000000</td>\n",
+              "      <td>76.000000</td>\n",
+              "      <td>8.000000</td>\n",
+              "      <td>9.000000</td>\n",
+              "      <td>512.329200</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-08ca2bf9-c544-4d04-a6ea-d67a448ef3d9')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-08ca2bf9-c544-4d04-a6ea-d67a448ef3d9 button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-08ca2bf9-c544-4d04-a6ea-d67a448ef3d9');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "summary": "{\n  \"name\": \"dftest\",\n  \"rows\": 8,\n  \"fields\": [\n    {\n      \"column\": \"PassengerId\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 412.1232851470217,\n        \"min\": 120.81045760473994,\n        \"max\": 1309.0,\n        \"num_unique_values\": 7,\n        \"samples\": [\n          418.0,\n          1100.5,\n          1204.75\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Pclass\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 147.0758997861715,\n        \"min\": 0.8418375519640519,\n        \"max\": 418.0,\n        \"num_unique_values\": 5,\n        \"samples\": [\n          2.2655502392344498,\n          3.0,\n          0.8418375519640519\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Age\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 109.15868834351015,\n        \"min\": 0.17,\n        \"max\": 332.0,\n        \"num_unique_values\": 8,\n        \"samples\": [\n          30.272590361445783,\n          27.0,\n          332.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"SibSp\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 147.2874584027116,\n        \"min\": 0.0,\n        \"max\": 418.0,\n        \"num_unique_values\": 6,\n        \"samples\": [\n          418.0,\n          0.4473684210526316,\n          8.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Parch\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 147.29373273558994,\n        \"min\": 0.0,\n        \"max\": 418.0,\n        \"num_unique_values\": 5,\n        \"samples\": [\n          0.3923444976076555,\n          9.0,\n          0.9814288785371684\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Fare\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 206.20808392426468,\n        \"min\": 0.0,\n        \"max\": 512.3292,\n        \"num_unique_values\": 8,\n        \"samples\": [\n          35.627188489208635,\n          14.4542,\n          417.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {},
+          "execution_count": 38
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.isnull().sum()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 460
+        },
+        "id": "0JC1L9HlkUK3",
+        "outputId": "09737537-b54e-4a9a-c68b-394480fb9768"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "PassengerId      0\n",
+              "Survived         0\n",
+              "Pclass           0\n",
+              "Name             0\n",
+              "Sex              0\n",
+              "Age            177\n",
+              "SibSp            0\n",
+              "Parch            0\n",
+              "Ticket           0\n",
+              "Fare             0\n",
+              "Cabin          687\n",
+              "Embarked         2\n",
+              "dtype: int64"
+            ],
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>0</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>PassengerId</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Survived</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Pclass</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Name</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Sex</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Age</th>\n",
+              "      <td>177</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>SibSp</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Parch</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Ticket</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Fare</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Cabin</th>\n",
+              "      <td>687</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Embarked</th>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div><br><label><b>dtype:</b> int64</label>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 39
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest.isnull().sum()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 429
+        },
+        "id": "TV4e5WYkktKj",
+        "outputId": "33e60373-6f70-4f75-8aeb-0ef433006cba"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "PassengerId      0\n",
+              "Pclass           0\n",
+              "Name             0\n",
+              "Sex              0\n",
+              "Age             86\n",
+              "SibSp            0\n",
+              "Parch            0\n",
+              "Ticket           0\n",
+              "Fare             1\n",
+              "Cabin          327\n",
+              "Embarked         0\n",
+              "dtype: int64"
+            ],
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>0</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>PassengerId</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Pclass</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Name</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Sex</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Age</th>\n",
+              "      <td>86</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>SibSp</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Parch</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Ticket</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Fare</th>\n",
+              "      <td>1</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Cabin</th>\n",
+              "      <td>327</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>Embarked</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div><br><label><b>dtype:</b> int64</label>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 40
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain['Age'] = dftrain['Age'].fillna(dftrain['Age'].median())"
+      ],
+      "metadata": {
+        "id": "FPDrA79FlGC2"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest['Age'] = dftest['Age'].fillna(dftest['Age'].median())"
+      ],
+      "metadata": {
+        "id": "we_-FmMc4QL0"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain['Fare'] = dftrain['Fare'].fillna(dftrain['Fare'].median())"
+      ],
+      "metadata": {
+        "id": "DxTo0OUD4euK"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest['Fare'] = dftest['Fare'].fillna(dftest['Fare'].median())"
+      ],
+      "metadata": {
+        "id": "gxoBis6Y5AJZ"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain['Embarked'] = dftrain['Embarked'].fillna(dftrain['Embarked'].mode()[0])"
+      ],
+      "metadata": {
+        "id": "8CmOEeAY52h3"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest['Embarked'] = dftest['Embarked'].fillna(dftest['Embarked'].mode()[0])"
+      ],
+      "metadata": {
+        "id": "rsQIH0e76Odm"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.drop(['Name','Cabin','Ticket'],axis = 1,inplace = True)"
+      ],
+      "metadata": {
+        "id": "63XTwAMcm-MV"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest.drop(['Name','Cabin','Ticket'],axis = 1,inplace = True)"
+      ],
+      "metadata": {
+        "id": "Qya4jKNfn8_h"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.columns"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Svlkq2bFoEW-",
+        "outputId": "bb16aa44-810b-47b6-df4e-5e237b983c51"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "Index(['PassengerId', 'Survived', 'Pclass', 'Sex', 'Age', 'SibSp', 'Parch',\n",
+              "       'Fare', 'Embarked'],\n",
+              "      dtype='object')"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 49
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest.columns"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "xYMuE7QDoRdJ",
+        "outputId": "0186e37b-5e02-41ef-f43c-18832f4e47ed"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "Index(['PassengerId', 'Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare',\n",
+              "       'Embarked'],\n",
+              "      dtype='object')"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 50
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.info()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "jjBASa2Mvx1I",
+        "outputId": "af16a7ea-7264-4031-87c9-9b392f6a4d62"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 891 entries, 0 to 890\n",
+            "Data columns (total 9 columns):\n",
+            " #   Column       Non-Null Count  Dtype  \n",
+            "---  ------       --------------  -----  \n",
+            " 0   PassengerId  891 non-null    int64  \n",
+            " 1   Survived     891 non-null    int64  \n",
+            " 2   Pclass       891 non-null    int64  \n",
+            " 3   Sex          891 non-null    object \n",
+            " 4   Age          891 non-null    float64\n",
+            " 5   SibSp        891 non-null    int64  \n",
+            " 6   Parch        891 non-null    int64  \n",
+            " 7   Fare         891 non-null    float64\n",
+            " 8   Embarked     891 non-null    object \n",
+            "dtypes: float64(2), int64(5), object(2)\n",
+            "memory usage: 62.8+ KB\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftest.info()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "f9K9s2_Owho9",
+        "outputId": "7c628978-7928-4c41-ffa4-8b5eb5a8e8ba"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "<class 'pandas.core.frame.DataFrame'>\n",
+            "RangeIndex: 418 entries, 0 to 417\n",
+            "Data columns (total 8 columns):\n",
+            " #   Column       Non-Null Count  Dtype  \n",
+            "---  ------       --------------  -----  \n",
+            " 0   PassengerId  418 non-null    int64  \n",
+            " 1   Pclass       418 non-null    int64  \n",
+            " 2   Sex          418 non-null    object \n",
+            " 3   Age          418 non-null    float64\n",
+            " 4   SibSp        418 non-null    int64  \n",
+            " 5   Parch        418 non-null    int64  \n",
+            " 6   Fare         418 non-null    float64\n",
+            " 7   Embarked     418 non-null    object \n",
+            "dtypes: float64(2), int64(4), object(2)\n",
+            "memory usage: 26.3+ KB\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Exploratory Data Analysis"
+      ],
+      "metadata": {
+        "id": "Tm_Ipx2fyigv"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "le = LabelEncoder()\n",
+        "dftrain[\"Sex\"] = le.fit_transform(dftrain[\"Sex\"])\n",
+        "dftest[\"Sex\"] = le.transform(dftest[\"Sex\"])"
+      ],
+      "metadata": {
+        "id": "M5cW4EcMG9PQ"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.head()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 226
+        },
+        "id": "7ipsDjVWHAEI",
+        "outputId": "a22b433e-32ab-4cfc-fcbd-8745ab1d67fb"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "   PassengerId  Survived  Pclass  Sex   Age  SibSp  Parch     Fare Embarked\n",
+              "0            1         0       3    1  22.0      1      0   7.2500        S\n",
+              "1            2         1       1    0  38.0      1      0  71.2833        C\n",
+              "2            3         1       3    0  26.0      0      0   7.9250        S\n",
+              "3            4         1       1    0  35.0      1      0  53.1000        S\n",
+              "4            5         0       3    1  35.0      0      0   8.0500        S"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-91b3f629-439a-40bd-8451-5c95a57e426b\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>PassengerId</th>\n",
+              "      <th>Survived</th>\n",
+              "      <th>Pclass</th>\n",
+              "      <th>Sex</th>\n",
+              "      <th>Age</th>\n",
+              "      <th>SibSp</th>\n",
+              "      <th>Parch</th>\n",
+              "      <th>Fare</th>\n",
+              "      <th>Embarked</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>3</td>\n",
+              "      <td>1</td>\n",
+              "      <td>22.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>7.2500</td>\n",
+              "      <td>S</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>2</td>\n",
+              "      <td>1</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>38.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>71.2833</td>\n",
+              "      <td>C</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>3</td>\n",
+              "      <td>1</td>\n",
+              "      <td>3</td>\n",
+              "      <td>0</td>\n",
+              "      <td>26.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>7.9250</td>\n",
+              "      <td>S</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>4</td>\n",
+              "      <td>1</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>35.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>53.1000</td>\n",
+              "      <td>S</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>5</td>\n",
+              "      <td>0</td>\n",
+              "      <td>3</td>\n",
+              "      <td>1</td>\n",
+              "      <td>35.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>8.0500</td>\n",
+              "      <td>S</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-91b3f629-439a-40bd-8451-5c95a57e426b')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-91b3f629-439a-40bd-8451-5c95a57e426b button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-91b3f629-439a-40bd-8451-5c95a57e426b');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "variable_name": "dftrain",
+              "summary": "{\n  \"name\": \"dftrain\",\n  \"rows\": 891,\n  \"fields\": [\n    {\n      \"column\": \"PassengerId\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 257,\n        \"min\": 1,\n        \"max\": 891,\n        \"num_unique_values\": 891,\n        \"samples\": [\n          710,\n          440,\n          841\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Survived\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 1,\n        \"num_unique_values\": 2,\n        \"samples\": [\n          1,\n          0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Pclass\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 1,\n        \"max\": 3,\n        \"num_unique_values\": 3,\n        \"samples\": [\n          3,\n          1\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Sex\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 1,\n        \"num_unique_values\": 2,\n        \"samples\": [\n          0,\n          1\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Age\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 13.019696550973194,\n        \"min\": 0.42,\n        \"max\": 80.0,\n        \"num_unique_values\": 88,\n        \"samples\": [\n          0.75,\n          22.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"SibSp\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 1,\n        \"min\": 0,\n        \"max\": 8,\n        \"num_unique_values\": 7,\n        \"samples\": [\n          1,\n          0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Parch\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 6,\n        \"num_unique_values\": 7,\n        \"samples\": [\n          0,\n          1\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Fare\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 49.693428597180905,\n        \"min\": 0.0,\n        \"max\": 512.3292,\n        \"num_unique_values\": 248,\n        \"samples\": [\n          11.2417,\n          51.8625\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Embarked\",\n      \"properties\": {\n        \"dtype\": \"category\",\n        \"num_unique_values\": 3,\n        \"samples\": [\n          \"S\",\n          \"C\"\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {},
+          "execution_count": 55
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "le2 = LabelEncoder()\n",
+        "dftrain[\"Embarked\"] = le2.fit_transform(dftrain[\"Embarked\"])\n",
+        "dftest[\"Embarked\"] = le2.transform(dftest[\"Embarked\"])"
+      ],
+      "metadata": {
+        "id": "WJE3gsQrHcic"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "dftrain.head()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 226
+        },
+        "id": "jEmdMGKEInbo",
+        "outputId": "e0e98b94-a05c-4a4d-897c-57434069f5c4"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "   PassengerId  Survived  Pclass  Sex   Age  SibSp  Parch     Fare  Embarked\n",
+              "0            1         0       3    1  22.0      1      0   7.2500         2\n",
+              "1            2         1       1    0  38.0      1      0  71.2833         0\n",
+              "2            3         1       3    0  26.0      0      0   7.9250         2\n",
+              "3            4         1       1    0  35.0      1      0  53.1000         2\n",
+              "4            5         0       3    1  35.0      0      0   8.0500         2"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-b09eda00-1c69-4054-a549-c4ff882d8e85\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>PassengerId</th>\n",
+              "      <th>Survived</th>\n",
+              "      <th>Pclass</th>\n",
+              "      <th>Sex</th>\n",
+              "      <th>Age</th>\n",
+              "      <th>SibSp</th>\n",
+              "      <th>Parch</th>\n",
+              "      <th>Fare</th>\n",
+              "      <th>Embarked</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>3</td>\n",
+              "      <td>1</td>\n",
+              "      <td>22.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>7.2500</td>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>2</td>\n",
+              "      <td>1</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>38.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>71.2833</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>3</td>\n",
+              "      <td>1</td>\n",
+              "      <td>3</td>\n",
+              "      <td>0</td>\n",
+              "      <td>26.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>7.9250</td>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>4</td>\n",
+              "      <td>1</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>35.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>53.1000</td>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>5</td>\n",
+              "      <td>0</td>\n",
+              "      <td>3</td>\n",
+              "      <td>1</td>\n",
+              "      <td>35.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>8.0500</td>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-b09eda00-1c69-4054-a549-c4ff882d8e85')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-b09eda00-1c69-4054-a549-c4ff882d8e85 button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-b09eda00-1c69-4054-a549-c4ff882d8e85');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "variable_name": "dftrain",
+              "summary": "{\n  \"name\": \"dftrain\",\n  \"rows\": 891,\n  \"fields\": [\n    {\n      \"column\": \"PassengerId\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 257,\n        \"min\": 1,\n        \"max\": 891,\n        \"num_unique_values\": 891,\n        \"samples\": [\n          710,\n          440,\n          841\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Survived\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 1,\n        \"num_unique_values\": 2,\n        \"samples\": [\n          1,\n          0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Pclass\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 1,\n        \"max\": 3,\n        \"num_unique_values\": 3,\n        \"samples\": [\n          3,\n          1\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Sex\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 1,\n        \"num_unique_values\": 2,\n        \"samples\": [\n          0,\n          1\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Age\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 13.019696550973194,\n        \"min\": 0.42,\n        \"max\": 80.0,\n        \"num_unique_values\": 88,\n        \"samples\": [\n          0.75,\n          22.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"SibSp\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 1,\n        \"min\": 0,\n        \"max\": 8,\n        \"num_unique_values\": 7,\n        \"samples\": [\n          1,\n          0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Parch\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 6,\n        \"num_unique_values\": 7,\n        \"samples\": [\n          0,\n          1\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Fare\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 49.693428597180905,\n        \"min\": 0.0,\n        \"max\": 512.3292,\n        \"num_unique_values\": 248,\n        \"samples\": [\n          11.2417,\n          51.8625\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Embarked\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 2,\n        \"num_unique_values\": 3,\n        \"samples\": [\n          2,\n          0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {},
+          "execution_count": 58
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Building X and Y :"
+      ],
+      "metadata": {
+        "id": "2Sdhi3LWOlDD"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "X = dftrain.drop(\"Survived\",axis = 1)\n",
+        "Y = dftrain[\"Survived\"]"
+      ],
+      "metadata": {
+        "id": "9rEMgXcpJZIf"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "X.head()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 226
+        },
+        "id": "W4rM_wnWKf8Z",
+        "outputId": "b59d5d06-6070-4bf7-e979-4ce3f4b89fbf"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "   PassengerId  Pclass  Sex   Age  SibSp  Parch     Fare  Embarked\n",
+              "0            1       3    1  22.0      1      0   7.2500         2\n",
+              "1            2       1    0  38.0      1      0  71.2833         0\n",
+              "2            3       3    0  26.0      0      0   7.9250         2\n",
+              "3            4       1    0  35.0      1      0  53.1000         2\n",
+              "4            5       3    1  35.0      0      0   8.0500         2"
+            ],
+            "text/html": [
+              "\n",
+              "  <div id=\"df-ab05b3b4-b61f-460c-ac6e-f0f424583617\" class=\"colab-df-container\">\n",
+              "    <div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>PassengerId</th>\n",
+              "      <th>Pclass</th>\n",
+              "      <th>Sex</th>\n",
+              "      <th>Age</th>\n",
+              "      <th>SibSp</th>\n",
+              "      <th>Parch</th>\n",
+              "      <th>Fare</th>\n",
+              "      <th>Embarked</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>1</td>\n",
+              "      <td>3</td>\n",
+              "      <td>1</td>\n",
+              "      <td>22.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>7.2500</td>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>2</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>38.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>71.2833</td>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>3</td>\n",
+              "      <td>3</td>\n",
+              "      <td>0</td>\n",
+              "      <td>26.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>7.9250</td>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>4</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>35.0</td>\n",
+              "      <td>1</td>\n",
+              "      <td>0</td>\n",
+              "      <td>53.1000</td>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>5</td>\n",
+              "      <td>3</td>\n",
+              "      <td>1</td>\n",
+              "      <td>35.0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>0</td>\n",
+              "      <td>8.0500</td>\n",
+              "      <td>2</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div>\n",
+              "    <div class=\"colab-df-buttons\">\n",
+              "\n",
+              "  <div class=\"colab-df-container\">\n",
+              "    <button class=\"colab-df-convert\" onclick=\"convertToInteractive('df-ab05b3b4-b61f-460c-ac6e-f0f424583617')\"\n",
+              "            title=\"Convert this dataframe to an interactive table.\"\n",
+              "            style=\"display:none;\">\n",
+              "\n",
+              "  <svg xmlns=\"http://www.w3.org/2000/svg\" height=\"24px\" viewBox=\"0 -960 960 960\">\n",
+              "    <path d=\"M120-120v-720h720v720H120Zm60-500h600v-160H180v160Zm220 220h160v-160H400v160Zm0 220h160v-160H400v160ZM180-400h160v-160H180v160Zm440 0h160v-160H620v160ZM180-180h160v-160H180v160Zm440 0h160v-160H620v160Z\"/>\n",
+              "  </svg>\n",
+              "    </button>\n",
+              "\n",
+              "  <style>\n",
+              "    .colab-df-container {\n",
+              "      display:flex;\n",
+              "      gap: 12px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert {\n",
+              "      background-color: #E8F0FE;\n",
+              "      border: none;\n",
+              "      border-radius: 50%;\n",
+              "      cursor: pointer;\n",
+              "      display: none;\n",
+              "      fill: #1967D2;\n",
+              "      height: 32px;\n",
+              "      padding: 0 0 0 0;\n",
+              "      width: 32px;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-convert:hover {\n",
+              "      background-color: #E2EBFA;\n",
+              "      box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);\n",
+              "      fill: #174EA6;\n",
+              "    }\n",
+              "\n",
+              "    .colab-df-buttons div {\n",
+              "      margin-bottom: 4px;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert {\n",
+              "      background-color: #3B4455;\n",
+              "      fill: #D2E3FC;\n",
+              "    }\n",
+              "\n",
+              "    [theme=dark] .colab-df-convert:hover {\n",
+              "      background-color: #434B5C;\n",
+              "      box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15);\n",
+              "      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));\n",
+              "      fill: #FFFFFF;\n",
+              "    }\n",
+              "  </style>\n",
+              "\n",
+              "    <script>\n",
+              "      const buttonEl =\n",
+              "        document.querySelector('#df-ab05b3b4-b61f-460c-ac6e-f0f424583617 button.colab-df-convert');\n",
+              "      buttonEl.style.display =\n",
+              "        google.colab.kernel.accessAllowed ? 'block' : 'none';\n",
+              "\n",
+              "      async function convertToInteractive(key) {\n",
+              "        const element = document.querySelector('#df-ab05b3b4-b61f-460c-ac6e-f0f424583617');\n",
+              "        const dataTable =\n",
+              "          await google.colab.kernel.invokeFunction('convertToInteractive',\n",
+              "                                                    [key], {});\n",
+              "        if (!dataTable) return;\n",
+              "\n",
+              "        const docLinkHtml = 'Like what you see? Visit the ' +\n",
+              "          '<a target=\"_blank\" href=https://colab.research.google.com/notebooks/data_table.ipynb>data table notebook</a>'\n",
+              "          + ' to learn more about interactive tables.';\n",
+              "        element.innerHTML = '';\n",
+              "        dataTable['output_type'] = 'display_data';\n",
+              "        await google.colab.output.renderOutput(dataTable, element);\n",
+              "        const docLink = document.createElement('div');\n",
+              "        docLink.innerHTML = docLinkHtml;\n",
+              "        element.appendChild(docLink);\n",
+              "      }\n",
+              "    </script>\n",
+              "  </div>\n",
+              "\n",
+              "\n",
+              "    </div>\n",
+              "  </div>\n"
+            ],
+            "application/vnd.google.colaboratory.intrinsic+json": {
+              "type": "dataframe",
+              "variable_name": "X",
+              "summary": "{\n  \"name\": \"X\",\n  \"rows\": 891,\n  \"fields\": [\n    {\n      \"column\": \"PassengerId\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 257,\n        \"min\": 1,\n        \"max\": 891,\n        \"num_unique_values\": 891,\n        \"samples\": [\n          710,\n          440,\n          841\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Pclass\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 1,\n        \"max\": 3,\n        \"num_unique_values\": 3,\n        \"samples\": [\n          3,\n          1,\n          2\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Sex\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 1,\n        \"num_unique_values\": 2,\n        \"samples\": [\n          0,\n          1\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Age\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 13.019696550973194,\n        \"min\": 0.42,\n        \"max\": 80.0,\n        \"num_unique_values\": 88,\n        \"samples\": [\n          0.75,\n          22.0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"SibSp\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 1,\n        \"min\": 0,\n        \"max\": 8,\n        \"num_unique_values\": 7,\n        \"samples\": [\n          1,\n          0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Parch\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 6,\n        \"num_unique_values\": 7,\n        \"samples\": [\n          0,\n          1\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Fare\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 49.693428597180905,\n        \"min\": 0.0,\n        \"max\": 512.3292,\n        \"num_unique_values\": 248,\n        \"samples\": [\n          11.2417,\n          51.8625\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    },\n    {\n      \"column\": \"Embarked\",\n      \"properties\": {\n        \"dtype\": \"number\",\n        \"std\": 0,\n        \"min\": 0,\n        \"max\": 2,\n        \"num_unique_values\": 3,\n        \"samples\": [\n          2,\n          0\n        ],\n        \"semantic_type\": \"\",\n        \"description\": \"\"\n      }\n    }\n  ]\n}"
+            }
+          },
+          "metadata": {},
+          "execution_count": 60
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "Y.head()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 241
+        },
+        "id": "2on34UkEKsFG",
+        "outputId": "1b884492-a8f7-4b04-a299-1e76dad8b015"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "0    0\n",
+              "1    1\n",
+              "2    1\n",
+              "3    1\n",
+              "4    0\n",
+              "Name: Survived, dtype: int64"
+            ],
+            "text/html": [
+              "<div>\n",
+              "<style scoped>\n",
+              "    .dataframe tbody tr th:only-of-type {\n",
+              "        vertical-align: middle;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe tbody tr th {\n",
+              "        vertical-align: top;\n",
+              "    }\n",
+              "\n",
+              "    .dataframe thead th {\n",
+              "        text-align: right;\n",
+              "    }\n",
+              "</style>\n",
+              "<table border=\"1\" class=\"dataframe\">\n",
+              "  <thead>\n",
+              "    <tr style=\"text-align: right;\">\n",
+              "      <th></th>\n",
+              "      <th>Survived</th>\n",
+              "    </tr>\n",
+              "  </thead>\n",
+              "  <tbody>\n",
+              "    <tr>\n",
+              "      <th>0</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>1</th>\n",
+              "      <td>1</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>2</th>\n",
+              "      <td>1</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>3</th>\n",
+              "      <td>1</td>\n",
+              "    </tr>\n",
+              "    <tr>\n",
+              "      <th>4</th>\n",
+              "      <td>0</td>\n",
+              "    </tr>\n",
+              "  </tbody>\n",
+              "</table>\n",
+              "</div><br><label><b>dtype:</b> int64</label>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 61
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Train-Test Split :"
+      ],
+      "metadata": {
+        "id": "ejdzHohYOclg"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "X_train,X_test,Y_train,Y_test = train_test_split(\n",
+        "X,\n",
+        "Y,\n",
+        "test_size = 0.2,\n",
+        "random_state = 42\n",
+        "\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "ONomuRIpLvmg"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "X_train.shape"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "d1VcBhanNDQI",
+        "outputId": "062cb66c-55fb-4436-df45-c407516a6a07"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "(712, 8)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 65
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "X_test.shape"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "drghg9AuNfme",
+        "outputId": "6362e18c-88ce-498b-b8a1-ca0e519831e9"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "(179, 8)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 66
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "Y_train.shape"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "4kvYZjypP7Ly",
+        "outputId": "0ec6f5ce-6608-49a4-bdf7-ed54d71bae75"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "(712,)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 75
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "Y_test.shape"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7RP3nVoyQEGd",
+        "outputId": "eb508322-1cd0-4df7-92fc-4c45bf87f4eb"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "(179,)"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 76
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Model Making :"
+      ],
+      "metadata": {
+        "id": "PzdoSTMAO7-f"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "\n",
+        "model = LogisticRegression(max_iter = 1000)"
+      ],
+      "metadata": {
+        "id": "I2DnZP4PNod6"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Model Train :"
+      ],
+      "metadata": {
+        "id": "CWNI-ADkPKfN"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model.fit(X_train, Y_train)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 100
+        },
+        "id": "x8eXp9JVPws1",
+        "outputId": "a97b6d31-e90d-4cd5-bd76-dfed81b3f434"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "LogisticRegression(max_iter=1000)"
+            ],
+            "text/html": [
+              "<style>#sk-container-id-1 {\n",
+              "  /* Definition of color scheme common for light and dark mode */\n",
+              "  --sklearn-color-text: #000;\n",
+              "  --sklearn-color-text-muted: #666;\n",
+              "  --sklearn-color-line: gray;\n",
+              "  /* Definition of color scheme for unfitted estimators */\n",
+              "  --sklearn-color-unfitted-level-0: #fff5e6;\n",
+              "  --sklearn-color-unfitted-level-1: #f6e4d2;\n",
+              "  --sklearn-color-unfitted-level-2: #ffe0b3;\n",
+              "  --sklearn-color-unfitted-level-3: chocolate;\n",
+              "  /* Definition of color scheme for fitted estimators */\n",
+              "  --sklearn-color-fitted-level-0: #f0f8ff;\n",
+              "  --sklearn-color-fitted-level-1: #d4ebff;\n",
+              "  --sklearn-color-fitted-level-2: #b3dbfd;\n",
+              "  --sklearn-color-fitted-level-3: cornflowerblue;\n",
+              "\n",
+              "  /* Specific color for light theme */\n",
+              "  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));\n",
+              "  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));\n",
+              "  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));\n",
+              "  --sklearn-color-icon: #696969;\n",
+              "\n",
+              "  @media (prefers-color-scheme: dark) {\n",
+              "    /* Redefinition of color scheme for dark theme */\n",
+              "    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));\n",
+              "    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));\n",
+              "    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));\n",
+              "    --sklearn-color-icon: #878787;\n",
+              "  }\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 {\n",
+              "  color: var(--sklearn-color-text);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 pre {\n",
+              "  padding: 0;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 input.sk-hidden--visually {\n",
+              "  border: 0;\n",
+              "  clip: rect(1px 1px 1px 1px);\n",
+              "  clip: rect(1px, 1px, 1px, 1px);\n",
+              "  height: 1px;\n",
+              "  margin: -1px;\n",
+              "  overflow: hidden;\n",
+              "  padding: 0;\n",
+              "  position: absolute;\n",
+              "  width: 1px;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-dashed-wrapped {\n",
+              "  border: 1px dashed var(--sklearn-color-line);\n",
+              "  margin: 0 0.4em 0.5em 0.4em;\n",
+              "  box-sizing: border-box;\n",
+              "  padding-bottom: 0.4em;\n",
+              "  background-color: var(--sklearn-color-background);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-container {\n",
+              "  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`\n",
+              "     but bootstrap.min.css set `[hidden] { display: none !important; }`\n",
+              "     so we also need the `!important` here to be able to override the\n",
+              "     default hidden behavior on the sphinx rendered scikit-learn.org.\n",
+              "     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */\n",
+              "  display: inline-block !important;\n",
+              "  position: relative;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-text-repr-fallback {\n",
+              "  display: none;\n",
+              "}\n",
+              "\n",
+              "div.sk-parallel-item,\n",
+              "div.sk-serial,\n",
+              "div.sk-item {\n",
+              "  /* draw centered vertical line to link estimators */\n",
+              "  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));\n",
+              "  background-size: 2px 100%;\n",
+              "  background-repeat: no-repeat;\n",
+              "  background-position: center center;\n",
+              "}\n",
+              "\n",
+              "/* Parallel-specific style estimator block */\n",
+              "\n",
+              "#sk-container-id-1 div.sk-parallel-item::after {\n",
+              "  content: \"\";\n",
+              "  width: 100%;\n",
+              "  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);\n",
+              "  flex-grow: 1;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-parallel {\n",
+              "  display: flex;\n",
+              "  align-items: stretch;\n",
+              "  justify-content: center;\n",
+              "  background-color: var(--sklearn-color-background);\n",
+              "  position: relative;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-parallel-item {\n",
+              "  display: flex;\n",
+              "  flex-direction: column;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-parallel-item:first-child::after {\n",
+              "  align-self: flex-end;\n",
+              "  width: 50%;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-parallel-item:last-child::after {\n",
+              "  align-self: flex-start;\n",
+              "  width: 50%;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-parallel-item:only-child::after {\n",
+              "  width: 0;\n",
+              "}\n",
+              "\n",
+              "/* Serial-specific style estimator block */\n",
+              "\n",
+              "#sk-container-id-1 div.sk-serial {\n",
+              "  display: flex;\n",
+              "  flex-direction: column;\n",
+              "  align-items: center;\n",
+              "  background-color: var(--sklearn-color-background);\n",
+              "  padding-right: 1em;\n",
+              "  padding-left: 1em;\n",
+              "}\n",
+              "\n",
+              "\n",
+              "/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is\n",
+              "clickable and can be expanded/collapsed.\n",
+              "- Pipeline and ColumnTransformer use this feature and define the default style\n",
+              "- Estimators will overwrite some part of the style using the `sk-estimator` class\n",
+              "*/\n",
+              "\n",
+              "/* Pipeline and ColumnTransformer style (default) */\n",
+              "\n",
+              "#sk-container-id-1 div.sk-toggleable {\n",
+              "  /* Default theme specific background. It is overwritten whether we have a\n",
+              "  specific estimator or a Pipeline/ColumnTransformer */\n",
+              "  background-color: var(--sklearn-color-background);\n",
+              "}\n",
+              "\n",
+              "/* Toggleable label */\n",
+              "#sk-container-id-1 label.sk-toggleable__label {\n",
+              "  cursor: pointer;\n",
+              "  display: flex;\n",
+              "  width: 100%;\n",
+              "  margin-bottom: 0;\n",
+              "  padding: 0.5em;\n",
+              "  box-sizing: border-box;\n",
+              "  text-align: center;\n",
+              "  align-items: start;\n",
+              "  justify-content: space-between;\n",
+              "  gap: 0.5em;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 label.sk-toggleable__label .caption {\n",
+              "  font-size: 0.6rem;\n",
+              "  font-weight: lighter;\n",
+              "  color: var(--sklearn-color-text-muted);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 label.sk-toggleable__label-arrow:before {\n",
+              "  /* Arrow on the left of the label */\n",
+              "  content: \"▸\";\n",
+              "  float: left;\n",
+              "  margin-right: 0.25em;\n",
+              "  color: var(--sklearn-color-icon);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {\n",
+              "  color: var(--sklearn-color-text);\n",
+              "}\n",
+              "\n",
+              "/* Toggleable content - dropdown */\n",
+              "\n",
+              "#sk-container-id-1 div.sk-toggleable__content {\n",
+              "  max-height: 0;\n",
+              "  max-width: 0;\n",
+              "  overflow: hidden;\n",
+              "  text-align: left;\n",
+              "  /* unfitted */\n",
+              "  background-color: var(--sklearn-color-unfitted-level-0);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-toggleable__content.fitted {\n",
+              "  /* fitted */\n",
+              "  background-color: var(--sklearn-color-fitted-level-0);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-toggleable__content pre {\n",
+              "  margin: 0.2em;\n",
+              "  border-radius: 0.25em;\n",
+              "  color: var(--sklearn-color-text);\n",
+              "  /* unfitted */\n",
+              "  background-color: var(--sklearn-color-unfitted-level-0);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-toggleable__content.fitted pre {\n",
+              "  /* unfitted */\n",
+              "  background-color: var(--sklearn-color-fitted-level-0);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {\n",
+              "  /* Expand drop-down */\n",
+              "  max-height: 200px;\n",
+              "  max-width: 100%;\n",
+              "  overflow: auto;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {\n",
+              "  content: \"▾\";\n",
+              "}\n",
+              "\n",
+              "/* Pipeline/ColumnTransformer-specific style */\n",
+              "\n",
+              "#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {\n",
+              "  color: var(--sklearn-color-text);\n",
+              "  background-color: var(--sklearn-color-unfitted-level-2);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {\n",
+              "  background-color: var(--sklearn-color-fitted-level-2);\n",
+              "}\n",
+              "\n",
+              "/* Estimator-specific style */\n",
+              "\n",
+              "/* Colorize estimator box */\n",
+              "#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {\n",
+              "  /* unfitted */\n",
+              "  background-color: var(--sklearn-color-unfitted-level-2);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {\n",
+              "  /* fitted */\n",
+              "  background-color: var(--sklearn-color-fitted-level-2);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-label label.sk-toggleable__label,\n",
+              "#sk-container-id-1 div.sk-label label {\n",
+              "  /* The background is the default theme color */\n",
+              "  color: var(--sklearn-color-text-on-default-background);\n",
+              "}\n",
+              "\n",
+              "/* On hover, darken the color of the background */\n",
+              "#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {\n",
+              "  color: var(--sklearn-color-text);\n",
+              "  background-color: var(--sklearn-color-unfitted-level-2);\n",
+              "}\n",
+              "\n",
+              "/* Label box, darken color on hover, fitted */\n",
+              "#sk-container-id-1 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {\n",
+              "  color: var(--sklearn-color-text);\n",
+              "  background-color: var(--sklearn-color-fitted-level-2);\n",
+              "}\n",
+              "\n",
+              "/* Estimator label */\n",
+              "\n",
+              "#sk-container-id-1 div.sk-label label {\n",
+              "  font-family: monospace;\n",
+              "  font-weight: bold;\n",
+              "  display: inline-block;\n",
+              "  line-height: 1.2em;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-label-container {\n",
+              "  text-align: center;\n",
+              "}\n",
+              "\n",
+              "/* Estimator-specific */\n",
+              "#sk-container-id-1 div.sk-estimator {\n",
+              "  font-family: monospace;\n",
+              "  border: 1px dotted var(--sklearn-color-border-box);\n",
+              "  border-radius: 0.25em;\n",
+              "  box-sizing: border-box;\n",
+              "  margin-bottom: 0.5em;\n",
+              "  /* unfitted */\n",
+              "  background-color: var(--sklearn-color-unfitted-level-0);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-estimator.fitted {\n",
+              "  /* fitted */\n",
+              "  background-color: var(--sklearn-color-fitted-level-0);\n",
+              "}\n",
+              "\n",
+              "/* on hover */\n",
+              "#sk-container-id-1 div.sk-estimator:hover {\n",
+              "  /* unfitted */\n",
+              "  background-color: var(--sklearn-color-unfitted-level-2);\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 div.sk-estimator.fitted:hover {\n",
+              "  /* fitted */\n",
+              "  background-color: var(--sklearn-color-fitted-level-2);\n",
+              "}\n",
+              "\n",
+              "/* Specification for estimator info (e.g. \"i\" and \"?\") */\n",
+              "\n",
+              "/* Common style for \"i\" and \"?\" */\n",
+              "\n",
+              ".sk-estimator-doc-link,\n",
+              "a:link.sk-estimator-doc-link,\n",
+              "a:visited.sk-estimator-doc-link {\n",
+              "  float: right;\n",
+              "  font-size: smaller;\n",
+              "  line-height: 1em;\n",
+              "  font-family: monospace;\n",
+              "  background-color: var(--sklearn-color-background);\n",
+              "  border-radius: 1em;\n",
+              "  height: 1em;\n",
+              "  width: 1em;\n",
+              "  text-decoration: none !important;\n",
+              "  margin-left: 0.5em;\n",
+              "  text-align: center;\n",
+              "  /* unfitted */\n",
+              "  border: var(--sklearn-color-unfitted-level-1) 1pt solid;\n",
+              "  color: var(--sklearn-color-unfitted-level-1);\n",
+              "}\n",
+              "\n",
+              ".sk-estimator-doc-link.fitted,\n",
+              "a:link.sk-estimator-doc-link.fitted,\n",
+              "a:visited.sk-estimator-doc-link.fitted {\n",
+              "  /* fitted */\n",
+              "  border: var(--sklearn-color-fitted-level-1) 1pt solid;\n",
+              "  color: var(--sklearn-color-fitted-level-1);\n",
+              "}\n",
+              "\n",
+              "/* On hover */\n",
+              "div.sk-estimator:hover .sk-estimator-doc-link:hover,\n",
+              ".sk-estimator-doc-link:hover,\n",
+              "div.sk-label-container:hover .sk-estimator-doc-link:hover,\n",
+              ".sk-estimator-doc-link:hover {\n",
+              "  /* unfitted */\n",
+              "  background-color: var(--sklearn-color-unfitted-level-3);\n",
+              "  color: var(--sklearn-color-background);\n",
+              "  text-decoration: none;\n",
+              "}\n",
+              "\n",
+              "div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,\n",
+              ".sk-estimator-doc-link.fitted:hover,\n",
+              "div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,\n",
+              ".sk-estimator-doc-link.fitted:hover {\n",
+              "  /* fitted */\n",
+              "  background-color: var(--sklearn-color-fitted-level-3);\n",
+              "  color: var(--sklearn-color-background);\n",
+              "  text-decoration: none;\n",
+              "}\n",
+              "\n",
+              "/* Span, style for the box shown on hovering the info icon */\n",
+              ".sk-estimator-doc-link span {\n",
+              "  display: none;\n",
+              "  z-index: 9999;\n",
+              "  position: relative;\n",
+              "  font-weight: normal;\n",
+              "  right: .2ex;\n",
+              "  padding: .5ex;\n",
+              "  margin: .5ex;\n",
+              "  width: min-content;\n",
+              "  min-width: 20ex;\n",
+              "  max-width: 50ex;\n",
+              "  color: var(--sklearn-color-text);\n",
+              "  box-shadow: 2pt 2pt 4pt #999;\n",
+              "  /* unfitted */\n",
+              "  background: var(--sklearn-color-unfitted-level-0);\n",
+              "  border: .5pt solid var(--sklearn-color-unfitted-level-3);\n",
+              "}\n",
+              "\n",
+              ".sk-estimator-doc-link.fitted span {\n",
+              "  /* fitted */\n",
+              "  background: var(--sklearn-color-fitted-level-0);\n",
+              "  border: var(--sklearn-color-fitted-level-3);\n",
+              "}\n",
+              "\n",
+              ".sk-estimator-doc-link:hover span {\n",
+              "  display: block;\n",
+              "}\n",
+              "\n",
+              "/* \"?\"-specific style due to the `<a>` HTML tag */\n",
+              "\n",
+              "#sk-container-id-1 a.estimator_doc_link {\n",
+              "  float: right;\n",
+              "  font-size: 1rem;\n",
+              "  line-height: 1em;\n",
+              "  font-family: monospace;\n",
+              "  background-color: var(--sklearn-color-background);\n",
+              "  border-radius: 1rem;\n",
+              "  height: 1rem;\n",
+              "  width: 1rem;\n",
+              "  text-decoration: none;\n",
+              "  /* unfitted */\n",
+              "  color: var(--sklearn-color-unfitted-level-1);\n",
+              "  border: var(--sklearn-color-unfitted-level-1) 1pt solid;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 a.estimator_doc_link.fitted {\n",
+              "  /* fitted */\n",
+              "  border: var(--sklearn-color-fitted-level-1) 1pt solid;\n",
+              "  color: var(--sklearn-color-fitted-level-1);\n",
+              "}\n",
+              "\n",
+              "/* On hover */\n",
+              "#sk-container-id-1 a.estimator_doc_link:hover {\n",
+              "  /* unfitted */\n",
+              "  background-color: var(--sklearn-color-unfitted-level-3);\n",
+              "  color: var(--sklearn-color-background);\n",
+              "  text-decoration: none;\n",
+              "}\n",
+              "\n",
+              "#sk-container-id-1 a.estimator_doc_link.fitted:hover {\n",
+              "  /* fitted */\n",
+              "  background-color: var(--sklearn-color-fitted-level-3);\n",
+              "}\n",
+              "</style><div id=\"sk-container-id-1\" class=\"sk-top-container\"><div class=\"sk-text-repr-fallback\"><pre>LogisticRegression(max_iter=1000)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class=\"sk-container\" hidden><div class=\"sk-item\"><div class=\"sk-estimator fitted sk-toggleable\"><input class=\"sk-toggleable__control sk-hidden--visually\" id=\"sk-estimator-id-1\" type=\"checkbox\" checked><label for=\"sk-estimator-id-1\" class=\"sk-toggleable__label fitted sk-toggleable__label-arrow\"><div><div>LogisticRegression</div></div><div><a class=\"sk-estimator-doc-link fitted\" rel=\"noreferrer\" target=\"_blank\" href=\"https://scikit-learn.org/1.6/modules/generated/sklearn.linear_model.LogisticRegression.html\">?<span>Documentation for LogisticRegression</span></a><span class=\"sk-estimator-doc-link fitted\">i<span>Fitted</span></span></div></label><div class=\"sk-toggleable__content fitted\"><pre>LogisticRegression(max_iter=1000)</pre></div> </div></div></div></div>"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 77
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Prediction :"
+      ],
+      "metadata": {
+        "id": "Am5otCpBRya0"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "Y_pred = model.predict(X_test)"
+      ],
+      "metadata": {
+        "id": "wQ3s1s9mRADC"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Accuracy :"
+      ],
+      "metadata": {
+        "id": "gnrAAzc-R_AT"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "accuracy = accuracy_score(Y_test,Y_pred)\n",
+        "print(\"accuracy:\", accuracy)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "-MNIjbS7SFE7",
+        "outputId": "6b380baf-9b87-4c5e-deb2-4352a0f31113"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "accuracy: 0.8100558659217877\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Confusion Matrix :"
+      ],
+      "metadata": {
+        "id": "ha65HR43S-vg"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(confusion_matrix(Y_test,Y_pred))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Sg16AMKMTERA",
+        "outputId": "dbdbe46c-67c8-4b31-a167-466813b088dc"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[[90 15]\n",
+            " [19 55]]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Classification Report :"
+      ],
+      "metadata": {
+        "id": "J4iHtwrTT0gZ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(classification_report(Y_test,Y_pred))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7wOQZ9dFT6FH",
+        "outputId": "3cb6cc2b-e797-446a-d95e-5afe0c94cb65"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "              precision    recall  f1-score   support\n",
+            "\n",
+            "           0       0.83      0.86      0.84       105\n",
+            "           1       0.79      0.74      0.76        74\n",
+            "\n",
+            "    accuracy                           0.81       179\n",
+            "   macro avg       0.81      0.80      0.80       179\n",
+            "weighted avg       0.81      0.81      0.81       179\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Confusion Matrix Visualization :"
+      ],
+      "metadata": {
+        "id": "-QIdUVWKVr7t"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "cm = confusion_matrix(Y_test,Y_pred)\n",
+        "print(cm)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "90zwASzTV5RS",
+        "outputId": "781e921e-3d3e-4dfa-c881-73d05acdac2d"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[[90 15]\n",
+            " [19 55]]\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "plt.figure(figsize=(5,4))\n",
+        "sns.heatmap(cm,annot = True,fmt = 'd',cmap = 'Blues')\n",
+        "plt.xlabel(\"predicted\")\n",
+        "plt.ylabel(\"Actual\")\n",
+        "plt.title(\"Confusion Matrix \")\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 212
+        },
+        "id": "tRNjPyg3XL6Q",
+        "outputId": "d4fbeeaf-380f-490d-a00e-8da8997afe9c"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "display_data",
+          "data": {
+            "text/plain": [
+              "<Figure size 500x400 with 2 Axes>"
+            ],
+            "image/png": "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\n"
+          },
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Conclusion:"
+      ],
+      "metadata": {
+        "id": "56j_nb7GaHed"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "\n",
+        "A Logistic Regression model was developed to predict passenger survival on the Titanic dataset. After preprocessing the data and training the model, it achieved an accuracy of 81.01% on the test dataset. This result indicates that the model performs well in predicting passenger survival based on features such as passenger class, sex, age, fare, and family information. Further improvements can be achieved by using advanced machine learning algorithms and feature engineering techniques."
+      ],
+      "metadata": {
+        "id": "2DCC2WWwa3Al"
+      }
+    }
+  ]
+}
